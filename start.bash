@@ -12,17 +12,8 @@ touch "${SLINK}/.ignore_gpumem"
 touch "${SLINK}/.ignore_cec"
 
 # Finally, run the docker image binding this folder:
-# TODO:
-#  - only allow needed devices.
-#  - stop the instance once done
 docker run \
   --volume ${SLINK}:/home/steamlink/.local/share/SteamLink \
   --privileged \
   steamlink
-
-# To add devices:
-#  - a single one --device=/dev/vchiq
-#  - all of them: --privileged
-# To evaluate:
-#   --detach
 
