@@ -1,0 +1,8 @@
+# Swap files:
+*.sw[op]
+*~
+1
+
+# Quemu files needed to crossbuild:
+/docker/qemu-*
+

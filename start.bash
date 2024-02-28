@@ -1,19 +1,28 @@
 #! /usr/bin/env bash
 
-SLINK="~/.local/share/SteamLink"
+SLINK="${HOME}/.local/share/SteamLink"
 
 # Create the main folder:
 mkdir -p ${SLINK}
 
-# These are to avoid certain checks:
-files=(
-  .ignore_cpuinfo
-  .ignore_x11
-)
-for f in ${files[*]}; do
-  touch "${SLINK}/${f}"
-done
+# Avoid steamlink's startup checks:
+touch "${SLINK}/.ignore_cpuinfo"
+touch "${SLINK}/.ignore_x11"
+touch "${SLINK}/.ignore_gpumem"
+touch "${SLINK}/.ignore_cec"
 
 # Finally, run the docker image binding this folder:
-# TODO: --volume ${SLINK}:/home/steamlink/.local/share/SteamLink
+# TODO:
+#  - only allow needed devices.
+#  - stop the instance once done
+docker run \
+  --volume ${SLINK}:/home/steamlink/.local/share/SteamLink \
+  --privileged \
+  steamlink
+
+# To add devices:
+#  - a single one --device=/dev/vchiq
+#  - all of them: --privileged
+# To evaluate:
+#   --detach
 

@@ -1,6 +1,9 @@
 # Start from the right debian image:
 FROM arm32v7/debian:buster
 
+# Avoid any interactive prompts:
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Update the image, and install some essential packages:
 RUN apt -y update && \
     apt -y upgrade && \
@@ -16,11 +19,11 @@ RUN echo "deb http://raspbian.raspberrypi.org/raspbian/ buster main contrib non-
 RUN apt-key adv --fetch-keys https://archive.raspbian.org/raspbian.public.key && \
     apt-key adv --fetch-keys https://archive.raspberrypi.org/debian/raspberrypi.gpg.key
 
-# Update, upgrade, install new packages:
+# Update, upgrade, and install some needed packages:
 RUN apt -y update && \
     apt -y upgrade && \
     apt -y install \
-      xterm \
+      bash \
       curl \
       libevdev2:armhf \
       libglib2.0-0:armhf \
@@ -36,26 +39,11 @@ RUN apt -y update && \
       libxkbcommon-x11-0:armhf \
       net-tools \
       python3 \
-      xz-utils \
-      bash
+      sudo \
+      xz-utils
 
-# Fetch and install the steamlink package from valve:
-RUN curl https://media.steampowered.com/steamlink/rpi/latest/steamlink.deb -o steamlink.deb && \
-    dpkg -i steamlink.deb; exit 0
-
-# Now, fix steamlink's dependencies:
-RUN apt install -f -y
-
-
-
-# WORKAROUND BELOW!!!!
-# These are dependencies usually installed by steamlinkdeps.
-# Since they require root privileges, I'd rather to install them manually now.
-# Later on, if everything works, it may be worth to add the user to sudoers
-# so it can install them at the right time.
-# NOTES:
-#  66 -> libgcc1:armhf | libgcc-s1:armhf
-#  75 -> libraspberrypi0:armhf | rbp-userland-osmc:armhf
+# These are the dependencies installed by steamlink's dependencies helper.
+# I doubt they're gonna change anytime soon, so let's install them:
 RUN apt install -y \
       cec-utils \
       openssl \
@@ -84,20 +72,33 @@ RUN apt install -y \
       libxkbcommon-x11-0:armhf \
       libxkbcommon0:armhf \
       zlib1g:armhf
-# WORKAROUND ABOVE!!!
 
+# Fetch and install the steamlink package from valve:
+RUN curl https://media.steampowered.com/steamlink/rpi/latest/steamlink.deb -o steamlink.deb && \
+    dpkg -i steamlink.deb; exit 0
 
+# Now fix its missing dependencies:
+RUN apt install -f -y
 
-# Add a steamlink user:
-RUN useradd -m -s /usr/bin/bash steamlink
+# User who will run steamlink:
+ARG sl_user="steamlink"
+
+# Add the user:
+RUN useradd -m -s /usr/bin/bash ${sl_user}
+
+# Add it to the default raspbian groups so everything can work:
+ARG groups="dialout audio video plugdev games users input netdev gpio spi"
+RUN for g in ${groups[@]}; do groupadd ${g} ; usermod -a -G ${g} ${sl_user}; done
+
+# Make it able to run sudo commands without password:
+#RUN echo "${sl_user} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers
 
 # And switch to it:
-USER steamlink
+USER ${sl_user}
 
 # Make steamlink skip wayland and cpu checks:
-RUN mkdir -p /home/steamlink/.local/share/SteamLink
+RUN mkdir -p /home/${sl_user}/.local/share/SteamLink
 
 # Run steamlink:
-#CMD steamlink
 ENTRYPOINT steamlink
 
