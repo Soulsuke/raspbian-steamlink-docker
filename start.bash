@@ -27,18 +27,34 @@ touch "${H_LOCAL_APP}/.ignore_x11"
 touch "${H_LOCAL_APP}/.ignore_gpumem"
 touch "${H_LOCAL_APP}/.ignore_cec"
 
-# Finally, run the docker image binding this folder:
+# Finally, run the docker container.
+# To set the right platform:
+#   --platform=linux/arm/v7
+# To use the host's X session:
+#   --volume "${HOME}/.Xauthority:${D_HOME}/.Xauthority:rw" \
+#   --network=host
+#   --env="DISPLAY"
+# To mount the right folders, so all user data stays on the host:
+#   --volume "${H_CONFIG}:${D_CONFIG}:rw"
+#   --volume "${H_LOCAL_APP}:${D_LOCAL_APP}:rw"
+#   --volume "${H_LOCAL_CONFIG}:${D_LOCAL_CONFIG}:rw"
+# To have the container access the needed devices:
+#   --device=/dev/dri:/dev/dri
+#   --device=/dev/vchiq:/dev/vchiq
+#   --device=/dev/input:/dev/input
+# To (hopefully) connect pulseaudio to the host:
+#   --volume="/run/user/${UID}/pulse:/run/user/1000/pulse:rw"
 docker run \
   --platform=linux/arm/v7 \
   --volume "${HOME}/.Xauthority:${D_HOME}/.Xauthority:rw" \
-  --volume="/run/user/${UID}/pulse:/run/user/1000/pulse:rw" \
+  --network=host \
+  --env="DISPLAY" \
   --volume "${H_CONFIG}:${D_CONFIG}:rw" \
   --volume "${H_LOCAL_APP}:${D_LOCAL_APP}:rw" \
   --volume "${H_LOCAL_CONFIG}:${D_LOCAL_CONFIG}:rw" \
-  --network=host \
-  --env="DISPLAY" \
   --device=/dev/dri:/dev/dri \
   --device=/dev/vchiq:/dev/vchiq \
   --device=/dev/input:/dev/input \
+  --volume="/run/user/${UID}/pulse:/run/user/1000/pulse:rw" \
   steamlink
 

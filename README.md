@@ -5,6 +5,12 @@ This is an attempt to make it work on modern aarm64 distros.
 
 **NOTE:** I'm a docker newbie, and I know enough of it to be dangerous.  
 
+Ideally, the `docker` folder contains all the needed files to build the image
+via `docker build --no-cache --platform=linux/arm/v7 -t steamlink docker/`,
+and the `start.bash` script takes care of running steamlink from the
+container setting up everything that's needed.  
+
+
 
 ### Acknowledgements
 
@@ -24,6 +30,7 @@ The pulseaudio config for docker has been taken from here:
 
 
 ### And what does not  
+
 * alsa can't find the sound card  
 * streaming does not work: `* failed to open vchiq instance`  
 
